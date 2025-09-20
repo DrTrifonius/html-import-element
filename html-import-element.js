@@ -2,6 +2,10 @@ class HTMLImport extends HTMLElement {
 	async connectedCallback() {
 		// src should contain a relative link to the HTML file
 		const htmlSrc = this.getAttribute('src');
+		// root indicates the element whose children should be cloned (e.g. body)
+		const rootSelector = this.getAttribute('root')
+
+
 
 		// fetch the content
 		const htmlResult = await fetch(htmlSrc);
@@ -13,12 +17,13 @@ class HTMLImport extends HTMLElement {
 		const htmlContent = await htmlResult.text();
 
 		// create an empty element to store new DOM
-		const empty = document.createElement('template');
+		//09/2025: changed from template to body to facilitate root selection
+		const domHolder = document.createElement('body');
 
-		empty.innerHTML = htmlContent;
+		domHolder.innerHTML = htmlContent;
 
 		// if any script tags are added, clone them
-		const scripts = empty.content.querySelectorAll('script');
+		const scripts = domHolder.querySelectorAll('script');
 		scripts.forEach((script) => {
 			// Clone the script node
 			const clonedScript = document.createElement('script');
@@ -30,7 +35,12 @@ class HTMLImport extends HTMLElement {
 		});
 
 		// replace this tag with the new content
-		this.replaceWith(...empty.content.childNodes)
+		if(rootSelector){
+			this.replaceWith(...domHolder.querySelector(rootSelector).childNodes)
+		}
+		else{
+			this.replaceWith(...domHolder.childNodes)
+		}
 	}
 }
 
